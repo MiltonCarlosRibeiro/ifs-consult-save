@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>IFS Consult - Estrutura</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <img src="assets/image/logo.png" alt="Logo" class="logo">
+    <h1>IFS Consult - Cadastro</h1>
+    <a href="#section-pedidos" class="btn-secondary" style="margin-left:auto;">Ir para Pedidos</a>
+</header>
+
+<div class="mp-container">
+    <section id="section-cadastro">
+        <div class="mp-header">
+            <h2>Novo Cadastro de Item Pai</h2>
+        </div>
+
+        <div class="mp-card" style="padding: 20px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="tipo" class="complement-input" style="width: 100px;">
+                    <option>W1</option><option>C1</option><option>C0</option><option>F</option><option>Outros</option>
+                </select>
+                <input type="text" id="codigo" class="complement-input" placeholder="Código do Item">
+                <input type="text" id="descricao" class="complement-input" placeholder="Descrição do item" style="flex:1;">
+                <button onclick="salvarItem()" class="btn-copy">Salvar</button>
+            </div>
+        </div>
+
+        <div id="arvoreEstrutura" class="mp-grid" style="margin-top: 20px;">
+            </div>
+    </section>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
