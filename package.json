@@ -1,0 +1,25 @@
+{
+  "name": "ifs-consult-save",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MiltonCarlosRibeiro/ifs-consult-save.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MiltonCarlosRibeiro/ifs-consult-save/issues"
+  },
+  "homepage": "https://github.com/MiltonCarlosRibeiro/ifs-consult-save#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.1.5"
+  }
+}
