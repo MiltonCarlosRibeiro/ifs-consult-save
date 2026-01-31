@@ -1,49 +1,102 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const path = require('path');
-const Item = require('./models/Item'); // Garante que o modelo recursivo seja usado
+const { Item } = require('./models/Item');
 
 const app = express();
 
-// Middlewares
+// --- CONFIGURAÇÕES ---
 app.use(express.json());
-// Define a pasta public para arquivos estáticos (HTML)
-app.use(express.static(path.join(__dirname, 'public')));
-// Define a pasta assets para CSS, JS e Imagens
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// Conexão MongoDB Local para Windows 11
-mongoose.connect('mongodb://127.0.0.1:27017/ifs_consult')
-    .then(() => console.log('✅ MongoDB conectado com sucesso!'))
-    .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
+// Servir arquivos estáticos (Ajustado para sua estrutura de pastas)
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // --- ROTAS API ---
 
-// 1. Salvar novo item (Pai) com trava de imutabilidade
+// 1. Salvar ou Atualizar
 app.post('/api/itens', async (req, res) => {
     try {
-        const novoItem = new Item(req.body);
-        const itemSalvo = await novoItem.save();
-        res.status(201).json(itemSalvo);
+        const { id, ...dados } = req.body;
+        if (id) {
+            await Item.update(dados, { where: { id } });
+            const atualizado = await Item.findByPk(id);
+            return res.status(200).json(atualizado);
+        }
+        const novoItem = await Item.create(dados);
+        res.status(201).json(novoItem);
     } catch (error) {
-        res.status(400).json({ 
-            error: 'Código já cadastrado ou dados inválidos.',
-            detalhes: error.message 
-        });
+        console.error(error);
+        res.status(400).json({ error: 'Erro ao salvar: Código já existe ou dados inválidos.' });
     }
 });
 
-// 2. Listar todos os itens
+// 2. Listar com Inteligência de Custos (Hierárquico)
 app.get('/api/itens', async (req, res) => {
     try {
-        const itens = await Item.find().populate('filhos');
-        res.json(itens);
+        const itens = await Item.findAll();
+        const listaSimples = itens.map(i => i.get({ plain: true }));
+
+        const processados = listaSimples.map(pai => {
+            // Soma os custos de todos os descendentes (filhos diretos)
+            const filhos = listaSimples.filter(f => f.parentId === pai.id);
+            const custoFilhos = filhos.reduce((acc, curr) => acc + (curr.custo || 0), 0);
+            
+            pai.custoTotal = (pai.custo || 0) + custoFilhos;
+
+            // Fórmula: Venda = Custo / (1 - Markup)
+            if (pai.markup > 0 && pai.markup < 1) {
+                pai.valorVenda = pai.custoTotal / (1 - pai.markup);
+            } else {
+                pai.valorVenda = pai.custoTotal;
+            }
+            return pai;
+        });
+
+        res.json(processados);
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar itens.' });
+        res.status(500).json({ error: 'Erro ao processar estrutura de custos.' });
     }
 });
 
+// 3. Importação em Massa (Excel) com Prevenção de Erros
+app.post('/api/itens/:paiId/filhos-bulk', async (req, res) => {
+    try {
+        const { paiId } = req.params;
+        const listaComIdPai = req.body.map(item => ({ 
+            ...item, 
+            parentId: paiId,
+            custo: item.custo || 0,
+            markup: item.markup || 0
+        }));
+        
+        // insertMany equivalente no Sequelize para performance
+        const filhos = await Item.bulkCreate(listaComIdPai, { ignoreDuplicates: false });
+        res.status(201).json(filhos);
+    } catch (error) {
+        console.error("Erro no Bulk:", error);
+        res.status(500).json({ error: 'Erro ao importar Excel. Verifique se há códigos duplicados na planilha.' });
+    }
+});
+
+// 4. Deletar com limpeza de órfãos
+app.delete('/api/itens/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Item.destroy({ where: { id } });
+        // Desvincula filhos para que não fiquem presos a um pai inexistente
+        await Item.update({ parentId: null }, { where: { parentId: id } });
+        res.status(200).json({ message: 'Item removido' });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao deletar.' });
+    }
+});
+
+// --- INICIALIZAÇÃO ---
 const PORT = 8091;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`
+    🚀 Sistema Pakmatic Online
+    📍 Endereço: http://localhost:${PORT}
+    📂 Banco de Dados: SQLite (Pasta /data)
+    `);
 });

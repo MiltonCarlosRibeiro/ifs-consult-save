@@ -3,35 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <title>IFS Consult - Estrutura</title>
+    <link rel="icon" href="../assets/image/logo.ico" type="image/x-icon">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
+
 <header>
-    <img src="../assets/image/logo.png" alt="Logo" class="logo">
-    <h1>IFS Consult - Cadastro</h1>
-    <a href="#section-pedidos" class="btn-secondary" style="margin-left:auto;">Ir para Pedidos</a>
+    <img src="../assets/image/logo.png" alt="Logo Pakmatic" class="logo">
+    <h1>IFS Consult - Cadastro Estruturado</h1>
+    <a href="#section-pedidos" class="btn-secondary" style="margin-left:auto; text-decoration:none;">Ir para Pedidos</a>
 </header>
 
 <div class="mp-container">
     <section id="section-cadastro">
         <div class="mp-header">
             <h2>Novo Cadastro de Item Pai</h2>
+            <div style="margin-left: auto;">
+                <span style="font-size: 0.8rem; color: #666;">Legenda de Status: 
+                    <span class="dot" style="background:#ccffcc;"></span> Verde |
+                    <span class="dot" style="background:#dde8fa;"></span> Azul |
+                    <span class="dot" style="background:#ffcccc;"></span> Vermelho
+                </span>
+            </div>
         </div>
 
         <div class="mp-card" style="padding: 20px;">
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="hidden" id="editItemId"> 
                 <select id="tipo" class="complement-input" style="width: 100px;">
-                    <option>W1</option><option>C1</option><option>C0</option><option>F</option><option>Outros</option>
+                    <option value="W1">W1</option>
+                    <option value="C1">C1</option>
+                    <option value="C0">C0</option>
+                    <option value="F">F</option>
+                    <option value="Outros">Outros</option>
                 </select>
-                <input type="text" id="codigo" class="complement-input" placeholder="Código do Item">
-                <input type="text" id="descricao" class="complement-input" placeholder="Descrição do item" style="flex:1;">
-                <button onclick="salvarItem()" class="btn-copy">Salvar</button>
+                <input type="text" id="codigo" class="complement-input" placeholder="Código">
+                <input type="text" id="descricao" class="complement-input" placeholder="Descrição" style="flex:1; min-width: 250px;">
+                <input type="number" id="custo" class="complement-input" placeholder="Custo R$" style="width: 110px;">
+                <input type="number" id="markup" class="complement-input" placeholder="Markup (ex: 0.2)" style="width: 135px;" step="0.01">
+                <button id="btnSalvarPrincipal" onclick="salvarItem()" class="btn-copy">Salvar Item</button>
             </div>
         </div>
 
         <div id="arvoreEstrutura" class="mp-grid" style="margin-top: 20px;">
-            </div>
+            <p style="text-align: center; color: #999;">Carregando banco SQLite local...</p>
+        </div>
     </section>
+</div>
+
+<div id="modalExcel" class="modal-overlay">
+    <div class="mp-card modal-content">
+        <header>
+            <h3>Gerenciar Estrutura</h3>
+            <button onclick="fecharModal()" style="margin-left:auto; cursor:pointer; background:none; border:none; font-size:1.5rem;">&times;</button>
+        </header>
+        <div class="mp-list">
+            <div style="background: #f9fbff; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-blue);">
+                <h4 style="margin-top:0;">Adicionar Manualmente</h4>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="manualCodigo" class="complement-input" placeholder="Código" style="width: 150px;">
+                    <input type="text" id="manualDesc" class="complement-input" placeholder="Descrição" style="flex:1;">
+                    <button onclick="salvarFilhoManual()" class="btn-copy">Add</button>
+                </div>
+            </div>
+            <div style="text-align: center; margin: 10px 0; font-weight: bold; color: #ccc;">OU</div>
+            <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                <h4 style="margin-top:0;">Importar do Excel (Código [TAB] Descrição)</h4>
+                <textarea id="txtExcel" class="complement-input" rows="8" placeholder="Cole as colunas do Excel aqui..."></textarea>
+                <div class="btn-group end" style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                    <button onclick="processarExcel()" class="btn-copy">Processar Excel</button>
+                </div>
+            </div>
+            <button onclick="fecharModal()" class="btn-secondary" style="width: 100%; margin-top: 10px;">Fechar</button>
+        </div>
+    </div>
 </div>
 
 <script src="../assets/js/main.js"></script>
