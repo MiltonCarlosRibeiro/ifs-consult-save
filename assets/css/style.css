@@ -1,19 +1,28 @@
 /* ==========================================================================
-   1. CONFIGURAÇÕES GLOBAIS
+   1. CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
    ========================================================================== */
 :root {
     --primary-blue: #2d6cdf;
     --success-green: #2e7d32;
+    --danger-red: #d32f2f;
+    --warning-orange: #f0ad4e;
+    --text-dark: #3a3a3a;
     --bg-light: #f4f7f6;
     --white: #ffffff;
     --border-color: #dddddd;
+    
+    /* Cores de Destaque */
+    --bg-verde-limao: #ccffcc;
+    --bg-azul-pastel: #dde8fa;
+    --bg-vermelho-pastel: #ffcccc;
 }
 
 body { 
-    font-family: 'Segoe UI', system-ui, sans-serif; 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
     background-color: var(--bg-light); 
     margin: 0; 
     padding: 0;
+    color: var(--text-dark);
 }
 
 header { 
@@ -30,32 +39,30 @@ header {
 .mp-container { 
     max-width: 1400px; 
     margin: 30px auto; 
-    padding: 0 20px; /* Margem lateral para não encostar na tela */
+    padding: 0 20px; 
 }
 
 .uppercase { text-transform: uppercase; }
 
 /* ==========================================================================
-   2. FORMULÁRIO DE CADASTRO (CORREÇÃO DE CORTE)
+   2. FORMULÁRIOS E INPUTS
    ========================================================================== */
-.form-section {
-    margin-bottom: 30px;
-}
+.form-section { margin-bottom: 30px; }
 
 .input-grid { 
     display: flex; 
     gap: 20px; 
     align-items: flex-end; 
-    flex-wrap: wrap; /* PERMITE QUEBRA SE NÃO COUBER, EVITANDO CORTE */
-    padding: 20px; /* Espaço interno do formulário */
+    flex-wrap: wrap; 
+    padding: 20px;
 }
 
 .field { 
     display: flex; 
     flex-direction: column; 
     gap: 6px; 
-    flex: 1; /* Faz os campos crescerem proporcionalmente */
-    min-width: 150px; /* Garante que não fiquem minúsculos */
+    flex: 1; 
+    min-width: 150px; 
 }
 
 .field label { 
@@ -70,11 +77,17 @@ header {
     border-radius: 6px; 
     font-size: 0.95rem;
     width: 100%;
-    box-sizing: border-box; /* Garante que o padding não aumente o tamanho final */
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.complement-input:focus {
+    border-color: var(--primary-blue);
+    outline: none;
 }
 
 /* ==========================================================================
-   3. CARDS DA ÁRVORE (BOM)
+   3. ESTRUTURA DA ÁRVORE (CARDS E IDENTAÇÃO)
    ========================================================================== */
 .mp-card { 
     background: var(--white); 
@@ -91,14 +104,23 @@ header {
     padding: 12px 20px; 
 }
 
-.node-wrapper {
-    margin-top: 10px;
-}
+.node-wrapper { margin-top: 10px; }
 
 .tree-branch { 
     border-left: 2px solid var(--border-color) !important; 
     position: relative; 
     padding-left: 10px;
+    margin-left: 20px;
+}
+
+.tree-branch::before { 
+    content: ""; 
+    position: absolute; 
+    left: -10px; 
+    top: 25px; 
+    width: 10px; 
+    height: 2px; 
+    background: var(--border-color); 
 }
 
 .checklist-group { 
@@ -119,6 +141,20 @@ header {
     align-items: center; 
 }
 
+/* Bolinhas de Cores */
+.dot {
+    height: 14px; width: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #999;
+    display: inline-block;
+    margin-left: 4px;
+}
+.dot.g { background: var(--bg-verde-limao); }
+.dot.b { background: var(--bg-azul-pastel); }
+.dot.r { background: var(--bg-vermelho-pastel); }
+.dot.n { background: var(--white); }
+
 /* ==========================================================================
    4. MODAL E ROLAGEM (SCROLL)
    ========================================================================== */
@@ -130,18 +166,20 @@ header {
     background: rgba(0,0,0,0.7); 
     z-index: 1000; 
     align-items: center; 
-    justify-content: center; 
+    justify-content: center;
+    backdrop-filter: blur(2px);
 }
 
 .modal-content { 
-    background: #fff; 
+    background: var(--white); 
     border-radius: 12px; 
     width: 90%; 
-    max-width: 1100px; 
-    max-height: 85vh; 
+    max-width: 1150px; 
+    max-height: 90vh; 
     display: flex; 
     flex-direction: column; 
     overflow: hidden; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .modal-scroll-area { 
@@ -151,13 +189,16 @@ header {
 }
 
 .modal-footer { 
-    padding: 20px; 
+    padding: 15px 25px; 
     border-top: 1px solid #eee; 
     background: #f8f9fa; 
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .table-scroll { 
-    max-height: 350px; 
+    max-height: 400px; 
     overflow-y: auto; 
     border: 1px solid var(--border-color); 
     margin: 15px 0;
@@ -165,16 +206,24 @@ header {
 }
 
 .preview-table { width: 100%; border-collapse: collapse; }
+
 .preview-table th { 
-    position: sticky; top: 0; background: #f8f9fa; 
-    padding: 12px; border-bottom: 2px solid var(--border-color); 
-    text-align: left; 
+    position: sticky; 
+    top: 0; 
+    background: #f8f9fa; 
+    padding: 12px; 
+    border-bottom: 2px solid var(--border-color); 
+    text-align: left;
+    z-index: 2;
 }
 
+.preview-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+
 .big-textarea { 
-    width: 100%; margin: 15px 0; padding: 15px; height: 120px; 
-    border-radius: 8px; border: 2px solid #ddd; font-family: monospace; 
-    box-sizing: border-box; 
+    width: 100%; margin: 10px 0; padding: 15px; height: 120px; 
+    border-radius: 8px; border: 2px solid #ddd; font-family: 'Cascadia Code', monospace; 
+    box-sizing: border-box;
+    resize: vertical;
 }
 
 /* ==========================================================================
@@ -183,15 +232,24 @@ header {
 .btn-copy, .btn-secondary { 
     cursor: pointer; border: none; border-radius: 6px; 
     padding: 10px 22px; font-weight: bold; 
-    transition: filter 0.2s;
+    transition: all 0.2s ease;
 }
 
 .btn-copy { background: var(--primary-blue); color: white; }
 .btn-secondary { background: #6c757d; color: white; }
-.btn-copy:hover, .btn-secondary:hover { filter: brightness(1.1); }
+
+.btn-copy:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-copy:active { transform: translateY(0); }
+
+.close-btn { 
+    background: none; border: none; 
+    font-size: 2rem; cursor: pointer; 
+    line-height: 1; padding: 0;
+}
 
 .help-tip {
-    width: 20px; height: 20px; background: #6c757d; color: white;
+    width: 20px; height: 20px; 
+    background: #6c757d; color: white;
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
     font-size: 12px; cursor: help; font-weight: bold;
 }

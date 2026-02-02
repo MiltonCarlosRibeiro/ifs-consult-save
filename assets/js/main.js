@@ -8,6 +8,7 @@ async function carregarItens() {
     const itens = await res.json();
     const container = document.getElementById('arvoreEstrutura');
     container.innerHTML = "";
+    // Filtra itens raiz (sem pai)
     itens.filter(i => !i.parentId).forEach(r => renderNivel(r, itens, container, 0));
 }
 
@@ -43,7 +44,6 @@ function renderNivel(item, lista, container, nivel) {
                 </div>
                 <div class="mp-row-field">
                     <span><b>${labelCusto}:</b> R$ ${item.custoAgrupado.toFixed(2)} | <b>M.U:</b> ${(item.markup*100).toFixed(0)}% | <b>VENDA FINAL: R$ ${item.vendaFinal.toFixed(2)}</b></span>
-                    <div class="help-tip" title="Venda = Custo / (1 - Markup)">?</div>
                 </div>
             </div>
         </div>
@@ -54,34 +54,44 @@ function renderNivel(item, lista, container, nivel) {
     filhos.forEach(f => renderNivel(f, lista, childContainer, nivel + 1));
 }
 
-/** NOVO MAPEAMENTO DE COLUNAS: A(0), C(2), D(3), F(5) **/
+/** MAPEAMENTO DE COLUNAS: A(0), C(2), D(3), F(5) **/
 function prepararPreview() {
     const text = document.getElementById('txtExcel').value;
     const delim = text.includes('\t') ? '\t' : (text.includes(';') ? ';' : ',');
     const lines = text.split('\n');
 
     itensNoPreview = lines.filter(l => l.trim().length > 10).map(l => {
-        // Remove aspas duplas dos dados do CSV
         const c = l.replace(/"/g, '').split(delim);
-        
-        // Mapeamento solicitado:
-        // Coluna A (0) -> Nivel/Linha
-        // Coluna C (2) -> Codigo
-        // Coluna D (3) -> Descricao
-        // Coluna F (5) -> Qtd (tratando a vírgula decimal)
         return { 
             nivel: c[0] ? c[0].trim() : '?',
             codigo: c[2] ? c[2].trim().toUpperCase() : '', 
             descricao: c[3] ? c[3].trim().toUpperCase() : 'S/D', 
             quantidade: c[5] ? parseFloat(c[5].replace(',', '.')) : 1 
         };
-    }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE"); // Ignora cabeçalho
+    }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE");
     
-    document.querySelector('#tabelaPreview tbody').innerHTML = itensNoPreview.map((i, idx) => `
-        <tr><td>${i.nivel}</td><td>${i.codigo}</td><td>${i.descricao}</td><td>${i.quantidade}</td><td><button onclick="itensNoPreview.splice(${idx},1);prepararPreview()">❌</button></td></tr>`).join('');
+    renderizarTabelaPreview();
+}
+
+/** FUNÇÃO PARA RENDERIZAR E ATUALIZAR O PREVIEW **/
+function renderizarTabelaPreview() {
+    const tbody = document.querySelector('#tabelaPreview tbody');
+    tbody.innerHTML = itensNoPreview.map((i, idx) => `
+        <tr>
+            <td>${i.nivel}</td>
+            <td>${i.codigo}</td>
+            <td>${i.descricao}</td>
+            <td>${i.quantidade}</td>
+            <td><button class="btn-preview-del" onclick="removerDoPreview(${idx})">❌</button></td>
+        </tr>`).join('');
     
-    document.getElementById('areaPreview').style.display = 'block';
-    document.getElementById('modalFooter').style.display = 'block';
+    document.getElementById('areaPreview').style.display = itensNoPreview.length > 0 ? 'block' : 'none';
+    document.getElementById('modalFooter').style.display = itensNoPreview.length > 0 ? 'block' : 'none';
+}
+
+function removerDoPreview(index) {
+    itensNoPreview.splice(index, 1);
+    renderizarTabelaPreview();
 }
 
 async function confirmarImportacao() {
@@ -95,7 +105,8 @@ function abrirImport(id) { idPaiSelecionado = id; document.getElementById('modal
 function fecharModal() { document.getElementById('modalExcel').style.display='none'; }
 function toggleNode(btn) { const cont = btn.closest('.node-wrapper').querySelector('.children-container'); cont.style.display = (cont.style.display === 'none') ? 'block' : 'none'; btn.innerText = (cont.style.display === 'none') ? '▶' : '▼'; }
 async function statusDB(id, campo, valor) { await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, [campo]:valor}) }); }
-async function excluir(id) { if(confirm("Excluir?")) { await fetch(`/api/itens/${id}`, {method:'DELETE'}); carregarItens(); } }
+async function excluir(id) { if(confirm("Excluir item e todos os seus filhos?")) { await fetch(`/api/itens/${id}`, {method:'DELETE'}); carregarItens(); } }
+
 function editar(item) {
     document.getElementById('editItemId').value = item.id;
     document.getElementById('codigo').value = item.codigo;
@@ -104,6 +115,7 @@ function editar(item) {
     document.getElementById('custo').value = item.custo;
     document.getElementById('markup').value = item.markup;
 }
+
 function limparFormularioPrincipal() {
     document.getElementById('editItemId').value = '';
     document.getElementById('codigo').value = '';
@@ -111,6 +123,7 @@ function limparFormularioPrincipal() {
     document.getElementById('custo').value = '';
     document.getElementById('markup').value = '';
 }
+
 async function salvarItem() {
     const dados = {
         id: document.getElementById('editItemId').value || null,
@@ -122,16 +135,4 @@ async function salvarItem() {
     };
     await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados) });
     limparFormularioPrincipal(); carregarItens();
-}
-async function salvarFilhoManual() {
-    const item = {
-        codigo: document.getElementById('mCodigo').value.toUpperCase(),
-        descricao: document.getElementById('mDescricao').value.toUpperCase(),
-        quantidade: parseFloat(document.getElementById('mQtd').value) || 1,
-        custo: parseFloat(document.getElementById('mCusto').value) || 0,
-        markup: parseFloat(document.getElementById('mMarkup').value) || 0,
-        parentId: idPaiSelecionado
-    };
-    await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item) });
-    fecharModal(); carregarItens();
 }
