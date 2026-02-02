@@ -2,83 +2,70 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>IFS Consult - Estrutura</title>
-    <link rel="icon" href="../assets/image/logo.ico" type="image/x-icon">
+    <title>IFS Consult - BOM</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-
 <header>
-    <img src="../assets/image/logo.png" alt="Logo Pakmatic" class="logo">
-    <h1>IFS Consult - Cadastro Estruturado</h1>
-    <a href="#section-pedidos" class="btn-secondary" style="margin-left:auto; text-decoration:none;">Ir para Pedidos</a>
+    <img src="../assets/image/logo.png" class="logo">
+    <h1>Controle de Engenharia e Custos</h1>
 </header>
 
 <div class="mp-container">
-    <section id="section-cadastro">
-        <div class="mp-header">
-            <h2>Novo Cadastro de Item Pai</h2>
-            <div style="margin-left: auto;">
-                <span style="font-size: 0.8rem; color: #666;">Legenda de Status: 
-                    <span class="dot" style="background:#ccffcc;"></span> Verde |
-                    <span class="dot" style="background:#dde8fa;"></span> Azul |
-                    <span class="dot" style="background:#ffcccc;"></span> Vermelho
-                </span>
-            </div>
-        </div>
-
-        <div class="mp-card" style="padding: 20px;">
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <div class="mp-card form-section">
+        <header class="header-blue">
+            <h3>1. Cadastro Manual de Item (Raiz)</h3>
+        </header>
+        <div class="modal-body">
+            <div class="input-grid">
                 <input type="hidden" id="editItemId"> 
-                <select id="tipo" class="complement-input" style="width: 100px;">
-                    <option value="W1">W1</option>
-                    <option value="C1">C1</option>
-                    <option value="C0">C0</option>
-                    <option value="F">F</option>
-                    <option value="Outros">Outros</option>
-                </select>
-                <input type="text" id="codigo" class="complement-input" placeholder="Código">
-                <input type="text" id="descricao" class="complement-input" placeholder="Descrição" style="flex:1; min-width: 250px;">
-                <input type="number" id="custo" class="complement-input" placeholder="Custo R$" style="width: 110px;">
-                <input type="number" id="markup" class="complement-input" placeholder="Markup (ex: 0.2)" style="width: 135px;" step="0.01">
-                <button id="btnSalvarPrincipal" onclick="salvarItem()" class="btn-copy">Salvar Item</button>
+                <div class="field"><label>Tipo</label><select id="tipo" class="complement-input"><option value="W1">W1</option><option value="F">F</option><option value="C1">C1</option></select></div>
+                <div class="field"><label>Código</label><input type="text" id="codigo" class="complement-input uppercase"></div>
+                <div class="field" style="flex:2;"><label>Descrição</label><input type="text" id="descricao" class="complement-input uppercase"></div>
+                <div class="field"><label>Qtd</label><input type="number" id="quantidade" class="complement-input" value="1"></div>
+                <div class="field"><label>Custo Unit R$</label><input type="number" id="custo" class="complement-input"></div>
+                <div class="field"><label>Markup %</label><input type="number" id="markup" class="complement-input" step="0.01"></div>
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button onclick="salvarItem()" class="btn-copy" id="btnSalvar">Salvar Cadastro</button>
+                <button onclick="limparFormularioPrincipal()" class="btn-secondary">Limpar / Novo</button>
             </div>
         </div>
-
-        <div id="arvoreEstrutura" class="mp-grid" style="margin-top: 20px;">
-            <p style="text-align: center; color: #999;">Carregando banco SQLite local...</p>
-        </div>
-    </section>
+    </div>
+    <div id="arvoreEstrutura"></div>
 </div>
 
 <div id="modalExcel" class="modal-overlay">
     <div class="mp-card modal-content">
-        <header>
-            <h3>Gerenciar Estrutura</h3>
-            <button onclick="fecharModal()" style="margin-left:auto; cursor:pointer; background:none; border:none; font-size:1.5rem;">&times;</button>
-        </header>
-        <div class="mp-list">
-            <div style="background: #f9fbff; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-blue);">
-                <h4 style="margin-top:0;">Adicionar Manualmente</h4>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="manualCodigo" class="complement-input" placeholder="Código" style="width: 150px;">
-                    <input type="text" id="manualDesc" class="complement-input" placeholder="Descrição" style="flex:1;">
-                    <button onclick="salvarFilhoManual()" class="btn-copy">Add</button>
+        <header><h3>Gerenciar Sub-itens (BOM)</h3><button onclick="fecharModal()" class="close-btn">&times;</button></header>
+        <div class="modal-body">
+            <div class="manual-insert-box">
+                <h4>Inserção Manual de Filho</h4>
+                <div class="input-grid">
+                    <div class="field"><label>Tipo</label><select id="mTipo" class="complement-input"><option value="F">F</option><option value="C1">C1</option></select></div>
+                    <div class="field"><label>Código</label><input type="text" id="mCodigo" class="complement-input uppercase"></div>
+                    <div class="field" style="flex:1;"><label>Descrição</label><input type="text" id="mDescricao" class="complement-input uppercase"></div>
+                    <div class="field"><label>Qtd</label><input type="number" id="mQtd" class="complement-input" value="1"></div>
+                    <div class="field"><label>Custo</label><input type="number" id="mCusto" class="complement-input"></div>
+                    <div class="field"><label>Markup</label><input type="number" id="mMarkup" class="complement-input" step="0.01"></div>
                 </div>
+                <button onclick="salvarFilhoManual()" class="btn-copy" style="margin-top:10px;">Salvar Item no Pai</button>
             </div>
-            <div style="text-align: center; margin: 10px 0; font-weight: bold; color: #ccc;">OU</div>
-            <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-                <h4 style="margin-top:0;">Importar do Excel (Código [TAB] Descrição)</h4>
-                <textarea id="txtExcel" class="complement-input" rows="8" placeholder="Cole as colunas do Excel aqui..."></textarea>
-                <div class="btn-group end" style="margin-top: 10px; display: flex; justify-content: flex-end;">
-                    <button onclick="processarExcel()" class="btn-copy">Processar Excel</button>
-                </div>
+            <div class="separator-text">OU COLAR TABELA</div>
+            <div id="areaColagem">
+                <textarea id="txtExcel" class="big-textarea" placeholder="Cole aqui as colunas A, B, E e K..."></textarea>
+                <button onclick="prepararPreview()" class="btn-copy" style="width:100%;">Analisar IFS</button>
             </div>
-            <button onclick="fecharModal()" class="btn-secondary" style="width: 100%; margin-top: 10px;">Fechar</button>
+            <div id="areaPreview" style="display:none;">
+                <table id="tabelaPreview" class="preview-table">
+                    <thead><tr><th>Nív</th><th>Cód</th><th>Descr</th><th>Qtd</th><th>Ação</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <button onclick="confirmarImportacao()" class="btn-copy" style="width:100%; margin-top:10px; background:green;">Persistir Lista</button>
+            </div>
         </div>
     </div>
 </div>
-
 <script src="../assets/js/main.js"></script>
 </body>
 </html>
