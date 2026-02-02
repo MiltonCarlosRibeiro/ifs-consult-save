@@ -3,12 +3,13 @@ let itensNoPreview = [];
 
 document.addEventListener('DOMContentLoaded', carregarItens);
 
+/** BUSCA E RENDERIZAÇÃO DA ÁRVORE **/
 async function carregarItens() {
     const res = await fetch('/api/itens');
     const itens = await res.json();
     const container = document.getElementById('arvoreEstrutura');
     container.innerHTML = "";
-    // Filtra itens raiz (sem pai)
+    // Filtra itens raiz (aqueles que não possuem parentId)
     itens.filter(i => !i.parentId).forEach(r => renderNivel(r, itens, container, 0));
 }
 
@@ -54,7 +55,7 @@ function renderNivel(item, lista, container, nivel) {
     filhos.forEach(f => renderNivel(f, lista, childContainer, nivel + 1));
 }
 
-/** MAPEAMENTO DE COLUNAS: A(0), C(2), D(3), F(5) **/
+/** MAPEAMENTO DE COLUNAS IFS: A(0), C(2), D(3), F(5) **/
 function prepararPreview() {
     const text = document.getElementById('txtExcel').value;
     const delim = text.includes('\t') ? '\t' : (text.includes(';') ? ';' : ',');
@@ -73,7 +74,7 @@ function prepararPreview() {
     renderizarTabelaPreview();
 }
 
-/** FUNÇÃO PARA RENDERIZAR E ATUALIZAR O PREVIEW **/
+/** RENDERIZAÇÃO DA TABELA DE PREVIEW NO MODAL **/
 function renderizarTabelaPreview() {
     const tbody = document.querySelector('#tabelaPreview tbody');
     tbody.innerHTML = itensNoPreview.map((i, idx) => `
@@ -94,19 +95,56 @@ function removerDoPreview(index) {
     renderizarTabelaPreview();
 }
 
+/** CONFIRMAR IMPORTAÇÃO COM LIMPEZA DA CAIXA **/
 async function confirmarImportacao() {
+    if (itensNoPreview.length === 0) return;
+
     const res = await fetch(`/api/itens/${idPaiSelecionado}/filhos-bulk`, { 
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(itensNoPreview) 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(itensNoPreview) 
     });
-    if(res.ok) { fecharModal(); carregarItens(); }
+
+    if (res.ok) {
+        // Limpa a caixa de texto e o preview após salvar
+        document.getElementById('txtExcel').value = "";
+        itensNoPreview = [];
+        renderizarTabelaPreview();
+        
+        fecharModal(); 
+        carregarItens(); 
+    }
 }
 
-function abrirImport(id) { idPaiSelecionado = id; document.getElementById('modalExcel').style.display='flex'; document.getElementById('areaPreview').style.display='none'; document.getElementById('modalFooter').style.display='none'; }
-function fecharModal() { document.getElementById('modalExcel').style.display='none'; }
-function toggleNode(btn) { const cont = btn.closest('.node-wrapper').querySelector('.children-container'); cont.style.display = (cont.style.display === 'none') ? 'block' : 'none'; btn.innerText = (cont.style.display === 'none') ? '▶' : '▼'; }
-async function statusDB(id, campo, valor) { await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, [campo]:valor}) }); }
-async function excluir(id) { if(confirm("Excluir item e todos os seus filhos?")) { await fetch(`/api/itens/${id}`, {method:'DELETE'}); carregarItens(); } }
+/** AUXILIARES DE MODAL E STATUS **/
+function abrirImport(id) { 
+    idPaiSelecionado = id; 
+    document.getElementById('modalExcel').style.display = 'flex'; 
+    document.getElementById('txtExcel').value = ""; // Limpa ao abrir
+    document.getElementById('areaPreview').style.display = 'none'; 
+    document.getElementById('modalFooter').style.display = 'none'; 
+}
 
+function fecharModal() { document.getElementById('modalExcel').style.display = 'none'; }
+
+function toggleNode(btn) { 
+    const cont = btn.closest('.node-wrapper').querySelector('.children-container'); 
+    cont.style.display = (cont.style.display === 'none') ? 'block' : 'none'; 
+    btn.innerText = (cont.style.display === 'none') ? '▶' : '▼'; 
+}
+
+async function statusDB(id, campo, valor) { 
+    await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, [campo]: valor }) }); 
+}
+
+async function excluir(id) { 
+    if (confirm("Excluir item e todos os seus filhos?")) { 
+        await fetch(`/api/itens/${id}`, { method: 'DELETE' }); 
+        carregarItens(); 
+    } 
+}
+
+/** GERENCIAMENTO MANUAL (CRUD) **/
 function editar(item) {
     document.getElementById('editItemId').value = item.id;
     document.getElementById('codigo').value = item.codigo;
@@ -114,14 +152,17 @@ function editar(item) {
     document.getElementById('quantidade').value = item.quantidade;
     document.getElementById('custo').value = item.custo;
     document.getElementById('markup').value = item.markup;
+    document.getElementById('btnSalvar').textContent = "Atualizar Item";
 }
 
 function limparFormularioPrincipal() {
     document.getElementById('editItemId').value = '';
     document.getElementById('codigo').value = '';
     document.getElementById('descricao').value = '';
+    document.getElementById('quantidade').value = 1;
     document.getElementById('custo').value = '';
     document.getElementById('markup').value = '';
+    document.getElementById('btnSalvar').textContent = "Salvar Cadastro";
 }
 
 async function salvarItem() {
@@ -133,6 +174,21 @@ async function salvarItem() {
         custo: parseFloat(document.getElementById('custo').value) || 0,
         markup: parseFloat(document.getElementById('markup').value) || 0
     };
-    await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados) });
-    limparFormularioPrincipal(); carregarItens();
+    await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+    limparFormularioPrincipal(); 
+    carregarItens();
+}
+
+async function salvarFilhoManual() {
+    const item = {
+        codigo: document.getElementById('mCodigo').value.toUpperCase(),
+        descricao: document.getElementById('mDescricao').value.toUpperCase(),
+        quantidade: parseFloat(document.getElementById('mQtd').value) || 1,
+        custo: parseFloat(document.getElementById('mCusto').value) || 0,
+        markup: parseFloat(document.getElementById('mMarkup').value) || 0,
+        parentId: idPaiSelecionado
+    };
+    await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+    fecharModal(); 
+    carregarItens();
 }

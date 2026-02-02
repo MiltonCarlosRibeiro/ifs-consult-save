@@ -17,10 +17,9 @@ app.get('/api/itens', async (req, res) => {
             const filhos = lista.filter(f => f.parentId === item.id);
             
             if (filhos.length === 0) {
-                // Item individual (Folha)
                 item.custoAgrupado = item.custo || 0;
             } else {
-                // Item Conjunto (Carrinho): Soma a venda dos filhos para compor o custo do pai
+                // Soma a venda dos filhos para compor o custo do pai
                 item.custoAgrupado = filhos.reduce((acc, f) => {
                     return acc + (calcularValores(f) * (f.quantidade || 1));
                 }, 0);
@@ -51,7 +50,7 @@ app.post('/api/itens', async (req, res) => {
     } catch (error) { res.status(400).json({ error: 'Erro ao salvar.' }); }
 });
 
-// Persistência em Massa (Bulk)
+// Persistência em Massa (Bulk) vinculada ao Pai selecionado
 app.post('/api/itens/:paiId/filhos-bulk', async (req, res) => {
     try {
         const { paiId } = req.params;
@@ -61,17 +60,19 @@ app.post('/api/itens/:paiId/filhos-bulk', async (req, res) => {
             codigo: i.codigo.toUpperCase().trim(),
             descricao: i.descricao.toUpperCase().trim()
         }));
-        await Item.bulkCreate(lista, { ignoreDuplicates: true });
+        // Removido o ignoreDuplicates para permitir o mesmo código em pais diferentes
+        await Item.bulkCreate(lista); 
         res.status(201).send();
     } catch (e) { res.status(500).json({error: e.message}); }
 });
 
 app.delete('/api/itens/:id', async (req, res) => {
+    // Ao deletar, removemos o item selecionado
     await Item.destroy({ where: { id: req.params.id } });
     res.status(200).send();
 });
 
-// Inicialização com Link Clicável
+// Inicialização com Link Clicável conforme solicitado
 const PORT = 8091;
 app.listen(PORT, () => {
     console.log(`\n🚀 Sistema rodando com sucesso!`);
