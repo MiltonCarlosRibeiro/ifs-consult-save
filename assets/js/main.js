@@ -24,7 +24,7 @@ function renderNivel(item, lista, container, nivel) {
     wrapper.innerHTML = `
         <div class="mp-card">
             <header>
-                ${filhos.length > 0 ? `<button class="btn-toggle" onclick="toggleNode(this)">▼</button>` : `<span style="width:24px"></span>`}
+                ${filhos.length > 0 ? `<button class="btn-toggle" onclick="toggleNode(this)">▶</button>` : `<span style="width:24px"></span>`}
                 <div class="checklist-group">
                     <label><input type="checkbox" ${item.checkCadastro?'checked':''} onchange="statusDB(${item.id},'checkCadastro',this.checked)"> Cad</label>
                     <label><input type="checkbox" ${item.checkEstrutura?'checked':''} onchange="statusDB(${item.id},'checkEstrutura',this.checked)"> Est</label>
@@ -51,6 +51,10 @@ function renderNivel(item, lista, container, nivel) {
         <div class="children-container"></div>
     `;
     const childContainer = wrapper.querySelector('.children-container');
+    
+    // LOGICA: Sempre inicia fechado
+    childContainer.style.display = 'none'; 
+
     container.appendChild(wrapper);
     filhos.forEach(f => renderNivel(f, lista, childContainer, nivel + 1));
 }
@@ -62,7 +66,6 @@ function prepararPreview() {
     const lines = text.split('\n');
 
     itensNoPreview = lines.filter(l => l.trim().length > 10).map(l => {
-        // Remove aspas duplas típicas de arquivos CSV
         const c = l.replace(/"/g, '').split(delim);
         return { 
             nivel: c[0] ? c[0].trim() : '?',
@@ -107,7 +110,6 @@ async function confirmarImportacao() {
     });
 
     if (res.ok) {
-        // Limpa a caixa de texto e o preview após salvar
         document.getElementById('txtExcel').value = "";
         itensNoPreview = [];
         renderizarTabelaPreview();
@@ -121,7 +123,7 @@ async function confirmarImportacao() {
 function abrirImport(id) { 
     idPaiSelecionado = id; 
     document.getElementById('modalExcel').style.display = 'flex'; 
-    document.getElementById('txtExcel').value = ""; // Limpa ao abrir para novo pai
+    document.getElementById('txtExcel').value = ""; 
     document.getElementById('areaPreview').style.display = 'none'; 
     document.getElementById('modalFooter').style.display = 'none'; 
 }
@@ -130,8 +132,9 @@ function fecharModal() { document.getElementById('modalExcel').style.display = '
 
 function toggleNode(btn) { 
     const cont = btn.closest('.node-wrapper').querySelector('.children-container'); 
-    cont.style.display = (cont.style.display === 'none') ? 'block' : 'none'; 
-    btn.innerText = (cont.style.display === 'none') ? '▶' : '▼'; 
+    const isHidden = cont.style.display === 'none';
+    cont.style.display = isHidden ? 'block' : 'none'; 
+    btn.innerText = isHidden ? '▼' : '▶'; 
 }
 
 async function statusDB(id, campo, valor) { 
