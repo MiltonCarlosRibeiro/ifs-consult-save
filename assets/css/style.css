@@ -1,43 +1,197 @@
+/* ==========================================================================
+   1. CONFIGURAÇÕES GLOBAIS
+   ========================================================================== */
 :root {
     --primary-blue: #2d6cdf;
-    --text-dark: #3a3a3a;
     --success-green: #2e7d32;
-    --error-red: #d32f2f;
-    --bg-verde-limao: #ccffcc;
+    --bg-light: #f4f7f6;
+    --white: #ffffff;
+    --border-color: #dddddd;
 }
 
-body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; }
-header { background: #fff; padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid #ddd; }
-.logo { height: 40px; margin-right: 15px; }
-.mp-container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
+body { 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    background-color: var(--bg-light); 
+    margin: 0; 
+    padding: 0;
+}
+
+header { 
+    background: var(--white); 
+    padding: 15px 30px; 
+    display: flex; 
+    align-items: center; 
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.logo { height: 45px; margin-right: 20px; }
+
+.mp-container { 
+    max-width: 1400px; 
+    margin: 30px auto; 
+    padding: 0 20px; /* Margem lateral para não encostar na tela */
+}
 
 .uppercase { text-transform: uppercase; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field label { font-size: 0.75rem; font-weight: bold; color: var(--primary-blue); }
 
-.mp-card { background: #fff; border-radius: 8px; margin-bottom: 12px; border-left: 5px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
-.header-blue { background: var(--primary-blue) !important; color: white; padding: 10px 15px; }
-.modal-body { padding: 15px; }
-.input-grid { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-.complement-input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; }
+/* ==========================================================================
+   2. FORMULÁRIO DE CADASTRO (CORREÇÃO DE CORTE)
+   ========================================================================== */
+.form-section {
+    margin-bottom: 30px;
+}
 
-.tree-branch { border-left: 2px solid #ddd !important; position: relative; }
-.tree-branch::before { content: ""; position: absolute; left: -15px; top: 25px; width: 15px; height: 2px; background: #ddd; }
-.btn-toggle { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--primary-blue); width: 24px; }
+.input-grid { 
+    display: flex; 
+    gap: 20px; 
+    align-items: flex-end; 
+    flex-wrap: wrap; /* PERMITE QUEBRA SE NÃO COUBER, EVITANDO CORTE */
+    padding: 20px; /* Espaço interno do formulário */
+}
 
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
-.modal-content { background: #fff; border-radius: 12px; width: 95%; max-width: 1100px; padding: 0; }
-.modal-content header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
-.manual-insert-box { background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px solid #cce5ff; margin-bottom: 20px; }
-.separator-text { text-align: center; margin: 20px 0; font-weight: bold; color: #999; }
-.big-textarea { width: calc(100% - 30px); margin: 10px 0; padding: 15px; height: 180px; border-radius: 8px; border: 2px solid #ddd; }
+.field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    flex: 1; /* Faz os campos crescerem proporcionalmente */
+    min-width: 150px; /* Garante que não fiquem minúsculos */
+}
 
-.checklist-group { display: flex; gap: 8px; font-size: 0.75rem; background: #eee; padding: 5px; border-radius: 6px; }
-.mp-row-field { padding: 8px 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
-.dot { height: 14px; width: 14px; border-radius: 50%; cursor: pointer; border: 1px solid #999; display: inline-block; }
-.dot.g { background: var(--bg-verde-limao); } .dot.b { background: #dde8fa; } .dot.r { background: #ffcccc; } .dot.n { background: #fff; }
+.field label { 
+    font-size: 0.8rem; 
+    font-weight: bold; 
+    color: var(--primary-blue); 
+}
 
-.btn-copy, .btn-secondary, .btn-edit, .btn-delete { cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; }
+.complement-input { 
+    padding: 10px 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    font-size: 0.95rem;
+    width: 100%;
+    box-sizing: border-box; /* Garante que o padding não aumente o tamanho final */
+}
+
+/* ==========================================================================
+   3. CARDS DA ÁRVORE (BOM)
+   ========================================================================== */
+.mp-card { 
+    background: var(--white); 
+    border-radius: 10px; 
+    margin-bottom: 15px; 
+    border-left: 6px solid #ccc; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08); 
+    overflow: hidden; 
+}
+
+.header-blue { 
+    background: var(--primary-blue) !important; 
+    color: white; 
+    padding: 12px 20px; 
+}
+
+.node-wrapper {
+    margin-top: 10px;
+}
+
+.tree-branch { 
+    border-left: 2px solid var(--border-color) !important; 
+    position: relative; 
+    padding-left: 10px;
+}
+
+.checklist-group { 
+    display: flex; 
+    gap: 12px; 
+    font-size: 0.8rem; 
+    background: #f1f3f5; 
+    padding: 8px 15px; 
+    border-radius: 6px; 
+    align-items: center; 
+}
+
+.mp-row-field { 
+    padding: 12px 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    border-bottom: 1px solid #eee; 
+    align-items: center; 
+}
+
+/* ==========================================================================
+   4. MODAL E ROLAGEM (SCROLL)
+   ========================================================================== */
+.modal-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.7); 
+    z-index: 1000; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.modal-content { 
+    background: #fff; 
+    border-radius: 12px; 
+    width: 90%; 
+    max-width: 1100px; 
+    max-height: 85vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+}
+
+.modal-scroll-area { 
+    padding: 25px; 
+    overflow-y: auto; 
+    flex: 1; 
+}
+
+.modal-footer { 
+    padding: 20px; 
+    border-top: 1px solid #eee; 
+    background: #f8f9fa; 
+}
+
+.table-scroll { 
+    max-height: 350px; 
+    overflow-y: auto; 
+    border: 1px solid var(--border-color); 
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+.preview-table { width: 100%; border-collapse: collapse; }
+.preview-table th { 
+    position: sticky; top: 0; background: #f8f9fa; 
+    padding: 12px; border-bottom: 2px solid var(--border-color); 
+    text-align: left; 
+}
+
+.big-textarea { 
+    width: 100%; margin: 15px 0; padding: 15px; height: 120px; 
+    border-radius: 8px; border: 2px solid #ddd; font-family: monospace; 
+    box-sizing: border-box; 
+}
+
+/* ==========================================================================
+   5. BOTÕES E AUXILIARES
+   ========================================================================== */
+.btn-copy, .btn-secondary { 
+    cursor: pointer; border: none; border-radius: 6px; 
+    padding: 10px 22px; font-weight: bold; 
+    transition: filter 0.2s;
+}
+
 .btn-copy { background: var(--primary-blue); color: white; }
 .btn-secondary { background: #6c757d; color: white; }
-.close-btn { background: none; border: none; font-size: 2rem; cursor: pointer; }
+.btn-copy:hover, .btn-secondary:hover { filter: brightness(1.1); }
+
+.help-tip {
+    width: 20px; height: 20px; background: #6c757d; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: help; font-weight: bold;
+}

@@ -8,7 +8,7 @@ const sequelize = new Sequelize({
 });
 
 const Item = sequelize.define('Item', {
-  tipo: { type: DataTypes.STRING, allowNull: false },
+  tipo: { type: DataTypes.STRING, allowNull: false, defaultValue: 'F' },
   codigo: { type: DataTypes.STRING, unique: true, allowNull: false },
   descricao: { type: DataTypes.TEXT },
   markup: { type: DataTypes.FLOAT, defaultValue: 0 },
@@ -17,7 +17,6 @@ const Item = sequelize.define('Item', {
   corDesc: { type: DataTypes.STRING, defaultValue: 'transparent' },
   corCusto: { type: DataTypes.STRING, defaultValue: 'transparent' },
   parentId: { type: DataTypes.INTEGER, allowNull: true },
-  // Os 5 Status de Checklist
   checkCadastro: { type: DataTypes.BOOLEAN, defaultValue: false },
   checkEstrutura: { type: DataTypes.BOOLEAN, defaultValue: false },
   checkMP: { type: DataTypes.BOOLEAN, defaultValue: false },
@@ -27,6 +26,6 @@ const Item = sequelize.define('Item', {
 
 sequelize.sync({ alter: true })
   .then(() => console.log('📂 Banco SQLite Sincronizado!'))
-  .catch(err => console.error('❌ Erro:', err));
+  .catch(err => console.error('❌ Erro ao sincronizar:', err));
 
 module.exports = { Item, sequelize };

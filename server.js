@@ -7,7 +7,36 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// Rota para Salvar/Atualizar Item Individual
+// Rota de Cálculo: Roll-up de Custos (Regra do Carrinho)
+app.get('/api/itens', async (req, res) => {
+    try {
+        const itens = await Item.findAll();
+        const lista = itens.map(i => i.get({ plain: true }));
+
+        const calcularValores = (item) => {
+            const filhos = lista.filter(f => f.parentId === item.id);
+            
+            if (filhos.length === 0) {
+                // Item individual (Folha)
+                item.custoAgrupado = item.custo || 0;
+            } else {
+                // Item Conjunto (Carrinho): Soma a venda dos filhos para compor o custo do pai
+                item.custoAgrupado = filhos.reduce((acc, f) => {
+                    return acc + (calcularValores(f) * (f.quantidade || 1));
+                }, 0);
+            }
+            
+            const m = item.markup || 0;
+            // Fórmula Comercial: Venda = Custo / (1 - Markup)
+            item.vendaFinal = (m > 0 && m < 1) ? item.custoAgrupado / (1 - m) : item.custoAgrupado;
+            return item.vendaFinal;
+        };
+
+        res.json(lista.map(item => { calcularValores(item); return item; }));
+    } catch (e) { res.status(500).send(); }
+});
+
+// Salvar/Editar Item
 app.post('/api/itens', async (req, res) => {
     try {
         const { id, ...dados } = req.body;
@@ -18,49 +47,23 @@ app.post('/api/itens', async (req, res) => {
             await Item.update(dados, { where: { id } });
             return res.status(200).json(await Item.findByPk(id));
         }
-        const novo = await Item.create(dados);
-        res.status(201).json(novo);
-    } catch (error) { 
-        res.status(400).json({ error: 'Erro ao salvar: Código duplicado ou dados inválidos.' }); 
-    }
+        res.status(201).json(await Item.create(dados));
+    } catch (error) { res.status(400).json({ error: 'Erro ao salvar.' }); }
 });
 
-// Listar Itens com Cálculo Recursivo de Custo e Preço de Venda
-app.get('/api/itens', async (req, res) => {
-    try {
-        const itens = await Item.findAll();
-        const lista = itens.map(i => i.get({ plain: true }));
-
-        const calcularCustoBOM = (paiId) => {
-            const filhos = lista.filter(f => f.parentId === paiId);
-            return filhos.reduce((acc, f) => {
-                const acumulado = (f.custo || 0) + calcularCustoBOM(f.id);
-                return acc + (acumulado * (f.quantidade || 1));
-            }, 0);
-        };
-
-        res.json(lista.map(item => {
-            item.custoTotal = (item.custo || 0) + calcularCustoBOM(item.id);
-            const m = item.markup || 0;
-            item.valorVenda = (m > 0 && m < 1) ? item.custoTotal / (1 - m) : item.custoTotal;
-            return item;
-        }));
-    } catch (e) { res.status(500).send(); }
-});
-
-// Importação em Massa amarrada ao Pai
+// Persistência em Massa (Bulk)
 app.post('/api/itens/:paiId/filhos-bulk', async (req, res) => {
     try {
         const { paiId } = req.params;
         const lista = req.body.map(i => ({ 
             ...i, 
             parentId: parseInt(paiId),
-            codigo: i.codigo.toUpperCase(),
-            descricao: i.descricao.toUpperCase()
+            codigo: i.codigo.toUpperCase().trim(),
+            descricao: i.descricao.toUpperCase().trim()
         }));
         await Item.bulkCreate(lista, { ignoreDuplicates: true });
         res.status(201).send();
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({error: e.message}); }
 });
 
 app.delete('/api/itens/:id', async (req, res) => {
@@ -68,5 +71,9 @@ app.delete('/api/itens/:id', async (req, res) => {
     res.status(200).send();
 });
 
+// Inicialização com Link Clicável
 const PORT = 8091;
-app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`\n🚀 Sistema rodando com sucesso!`);
+    console.log(`🔗 Link de acesso: http://localhost:${PORT}\n`);
+});

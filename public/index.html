@@ -2,31 +2,25 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>IFS Consult - BOM</title>
+    <title>Pakmatic - Engenharia</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-<header>
-    <img src="../assets/image/logo.png" class="logo">
-    <h1>Controle de Engenharia e Custos</h1>
-</header>
+<header><img src="../assets/image/logo.png" class="logo"><h1>Controle de Engenharia e Custos</h1></header>
 
 <div class="mp-container">
     <div class="mp-card form-section">
-        <header class="header-blue">
-            <h3>1. Cadastro Manual de Item (Raiz)</h3>
-        </header>
+        <header class="header-blue"><h3>Cadastro de Item (Nível Raiz)</h3></header>
         <div class="modal-body">
             <div class="input-grid">
                 <input type="hidden" id="editItemId"> 
-                <div class="field"><label>Tipo</label><select id="tipo" class="complement-input"><option value="W1">W1</option><option value="F">F</option><option value="C1">C1</option></select></div>
                 <div class="field"><label>Código</label><input type="text" id="codigo" class="complement-input uppercase"></div>
                 <div class="field" style="flex:2;"><label>Descrição</label><input type="text" id="descricao" class="complement-input uppercase"></div>
                 <div class="field"><label>Qtd</label><input type="number" id="quantidade" class="complement-input" value="1"></div>
-                <div class="field"><label>Custo Unit R$</label><input type="number" id="custo" class="complement-input"></div>
-                <div class="field"><label>Markup %</label><input type="number" id="markup" class="complement-input" step="0.01"></div>
+                <div class="field"><label>Custo Unit</label><input type="number" id="custo" class="complement-input" step="0.01"></div>
+                <div class="field"><label>Markup %</label><input type="number" id="markup" class="complement-input" step="0.01" placeholder="Ex: 0.25"></div>
             </div>
-            <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <div style="margin-top:15px; display:flex; gap:10px;">
                 <button onclick="salvarItem()" class="btn-copy" id="btnSalvar">Salvar Cadastro</button>
                 <button onclick="limparFormularioPrincipal()" class="btn-secondary">Limpar / Novo</button>
             </div>
@@ -37,33 +31,36 @@
 
 <div id="modalExcel" class="modal-overlay">
     <div class="mp-card modal-content">
-        <header><h3>Gerenciar Sub-itens (BOM)</h3><button onclick="fecharModal()" class="close-btn">&times;</button></header>
-        <div class="modal-body">
+        <header><h3>Compor Sub-itens (BOM)</h3><button onclick="fecharModal()" class="close-btn">&times;</button></header>
+        
+        <div class="modal-scroll-area">
             <div class="manual-insert-box">
-                <h4>Inserção Manual de Filho</h4>
+                <h4>1. Adicionar Manualmente</h4>
                 <div class="input-grid">
-                    <div class="field"><label>Tipo</label><select id="mTipo" class="complement-input"><option value="F">F</option><option value="C1">C1</option></select></div>
                     <div class="field"><label>Código</label><input type="text" id="mCodigo" class="complement-input uppercase"></div>
                     <div class="field" style="flex:1;"><label>Descrição</label><input type="text" id="mDescricao" class="complement-input uppercase"></div>
                     <div class="field"><label>Qtd</label><input type="number" id="mQtd" class="complement-input" value="1"></div>
-                    <div class="field"><label>Custo</label><input type="number" id="mCusto" class="complement-input"></div>
-                    <div class="field"><label>Markup</label><input type="number" id="mMarkup" class="complement-input" step="0.01"></div>
+                    <div class="field"><label>Custo Unit</label><input type="number" id="mCusto" class="complement-input" step="0.01"></div>
+                    <div class="field"><label>Markup %</label><input type="number" id="mMarkup" class="complement-input" step="0.01"></div>
                 </div>
-                <button onclick="salvarFilhoManual()" class="btn-copy" style="margin-top:10px;">Salvar Item no Pai</button>
+                <button onclick="salvarFilhoManual()" class="btn-copy" style="margin-top:10px;">Adicionar ao Carrinho</button>
             </div>
-            <div class="separator-text">OU COLAR TABELA</div>
-            <div id="areaColagem">
-                <textarea id="txtExcel" class="big-textarea" placeholder="Cole aqui as colunas A, B, E e K..."></textarea>
-                <button onclick="prepararPreview()" class="btn-copy" style="width:100%;">Analisar IFS</button>
-            </div>
-            <div id="areaPreview" style="display:none;">
+
+            <div class="separator-text">OU COLAR NOVO PADRÃO (A, C, D, F)</div>
+            <textarea id="txtExcel" class="big-textarea" placeholder="Cole aqui a tabela do IFS (A=Nivel, C=Codigo, D=Descricao, F=Qtd)..."></textarea>
+            <button onclick="prepararPreview()" class="btn-copy" style="width:100%;">Analisar Dados IFS</button>
+            
+            <div id="areaPreview" style="display:none; margin-top:20px;">
                 <table id="tabelaPreview" class="preview-table">
-                    <thead><tr><th>Nív</th><th>Cód</th><th>Descr</th><th>Qtd</th><th>Ação</th></tr></thead>
+                    <thead><tr><th>Linha</th><th>Código</th><th>Descrição</th><th>Qtd</th><th>Ação</th></tr></thead>
                     <tbody></tbody>
                 </table>
-                <button onclick="confirmarImportacao()" class="btn-copy" style="width:100%; margin-top:10px; background:green;">Persistir Lista</button>
             </div>
         </div>
+
+        <footer id="modalFooter" class="modal-footer" style="display:none;">
+            <button onclick="confirmarImportacao()" class="btn-copy" style="width:100%; background:var(--success-green);">PERSISTIR FILHOS NO BANCO</button>
+        </footer>
     </div>
 </div>
 <script src="../assets/js/main.js"></script>

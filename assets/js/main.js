@@ -17,6 +17,8 @@ function renderNivel(item, lista, container, nivel) {
     wrapper.className = `node-wrapper ${nivel > 0 ? 'tree-branch' : ''}`;
     wrapper.style.marginLeft = `${nivel * 30}px`;
 
+    const labelCusto = filhos.length > 0 ? 'CUSTO COMPOSIÇÃO' : 'CUSTO UNIT';
+
     wrapper.innerHTML = `
         <div class="mp-card">
             <header>
@@ -36,23 +38,12 @@ function renderNivel(item, lista, container, nivel) {
                 </div>
             </header>
             <div class="mp-list">
-                <div class="mp-row-field highlight-${item.corDesc}">
+                <div class="mp-row-field">
                     <span style="flex:1"><b>DESCRIÇÃO:</b> ${item.descricao} (x${item.quantidade})</span>
-                    <div class="color-picker">
-                        <span class="dot g" onclick="pintar(${item.id},'corDesc','verde')"></span>
-                        <span class="dot b" onclick="pintar(${item.id},'corDesc','azul')"></span>
-                        <span class="dot r" onclick="pintar(${item.id},'corDesc','vermelho')"></span>
-                        <span class="dot n" onclick="pintar(${item.id},'corDesc','transparent')"></span>
-                    </div>
                 </div>
-                <div class="mp-row-field highlight-${item.corCusto}">
-                    <span><b>CUSTO ACUM:</b> R$ ${item.custoTotal.toFixed(2)} | <b>MARKUP:</b> ${(item.markup*100).toFixed(0)}% | <b>VENDA:</b> R$ ${item.valorVenda.toFixed(2)}</span>
-                    <div class="color-picker">
-                        <span class="dot g" onclick="pintar(${item.id},'corCusto','verde')"></span>
-                        <span class="dot b" onclick="pintar(${item.id},'corCusto','azul')"></span>
-                        <span class="dot r" onclick="pintar(${item.id},'corCusto','vermelho')"></span>
-                        <span class="dot n" onclick="pintar(${item.id},'corCusto','transparent')"></span>
-                    </div>
+                <div class="mp-row-field">
+                    <span><b>${labelCusto}:</b> R$ ${item.custoAgrupado.toFixed(2)} | <b>M.U:</b> ${(item.markup*100).toFixed(0)}% | <b>VENDA FINAL: R$ ${item.vendaFinal.toFixed(2)}</b></span>
+                    <div class="help-tip" title="Venda = Custo / (1 - Markup)">?</div>
                 </div>
             </div>
         </div>
@@ -63,19 +54,68 @@ function renderNivel(item, lista, container, nivel) {
     filhos.forEach(f => renderNivel(f, lista, childContainer, nivel + 1));
 }
 
-function toggleNode(btn) {
-    const cont = btn.closest('.node-wrapper').querySelector('.children-container');
-    const isVisible = cont.style.display !== 'none';
-    cont.style.display = isVisible ? 'none' : 'block';
-    btn.innerText = isVisible ? '▶' : '▼';
+/** NOVO MAPEAMENTO DE COLUNAS: A(0), C(2), D(3), F(5) **/
+function prepararPreview() {
+    const text = document.getElementById('txtExcel').value;
+    const delim = text.includes('\t') ? '\t' : (text.includes(';') ? ';' : ',');
+    const lines = text.split('\n');
+
+    itensNoPreview = lines.filter(l => l.trim().length > 10).map(l => {
+        // Remove aspas duplas dos dados do CSV
+        const c = l.replace(/"/g, '').split(delim);
+        
+        // Mapeamento solicitado:
+        // Coluna A (0) -> Nivel/Linha
+        // Coluna C (2) -> Codigo
+        // Coluna D (3) -> Descricao
+        // Coluna F (5) -> Qtd (tratando a vírgula decimal)
+        return { 
+            nivel: c[0] ? c[0].trim() : '?',
+            codigo: c[2] ? c[2].trim().toUpperCase() : '', 
+            descricao: c[3] ? c[3].trim().toUpperCase() : 'S/D', 
+            quantidade: c[5] ? parseFloat(c[5].replace(',', '.')) : 1 
+        };
+    }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE"); // Ignora cabeçalho
+    
+    document.querySelector('#tabelaPreview tbody').innerHTML = itensNoPreview.map((i, idx) => `
+        <tr><td>${i.nivel}</td><td>${i.codigo}</td><td>${i.descricao}</td><td>${i.quantidade}</td><td><button onclick="itensNoPreview.splice(${idx},1);prepararPreview()">❌</button></td></tr>`).join('');
+    
+    document.getElementById('areaPreview').style.display = 'block';
+    document.getElementById('modalFooter').style.display = 'block';
 }
 
+async function confirmarImportacao() {
+    const res = await fetch(`/api/itens/${idPaiSelecionado}/filhos-bulk`, { 
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(itensNoPreview) 
+    });
+    if(res.ok) { fecharModal(); carregarItens(); }
+}
+
+function abrirImport(id) { idPaiSelecionado = id; document.getElementById('modalExcel').style.display='flex'; document.getElementById('areaPreview').style.display='none'; document.getElementById('modalFooter').style.display='none'; }
+function fecharModal() { document.getElementById('modalExcel').style.display='none'; }
+function toggleNode(btn) { const cont = btn.closest('.node-wrapper').querySelector('.children-container'); cont.style.display = (cont.style.display === 'none') ? 'block' : 'none'; btn.innerText = (cont.style.display === 'none') ? '▶' : '▼'; }
+async function statusDB(id, campo, valor) { await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, [campo]:valor}) }); }
+async function excluir(id) { if(confirm("Excluir?")) { await fetch(`/api/itens/${id}`, {method:'DELETE'}); carregarItens(); } }
+function editar(item) {
+    document.getElementById('editItemId').value = item.id;
+    document.getElementById('codigo').value = item.codigo;
+    document.getElementById('descricao').value = item.descricao;
+    document.getElementById('quantidade').value = item.quantidade;
+    document.getElementById('custo').value = item.custo;
+    document.getElementById('markup').value = item.markup;
+}
+function limparFormularioPrincipal() {
+    document.getElementById('editItemId').value = '';
+    document.getElementById('codigo').value = '';
+    document.getElementById('descricao').value = '';
+    document.getElementById('custo').value = '';
+    document.getElementById('markup').value = '';
+}
 async function salvarItem() {
     const dados = {
         id: document.getElementById('editItemId').value || null,
-        tipo: document.getElementById('tipo').value,
-        codigo: document.getElementById('codigo').value,
-        descricao: document.getElementById('descricao').value,
+        codigo: document.getElementById('codigo').value.toUpperCase(),
+        descricao: document.getElementById('descricao').value.toUpperCase(),
         quantidade: parseFloat(document.getElementById('quantidade').value) || 1,
         custo: parseFloat(document.getElementById('custo').value) || 0,
         markup: parseFloat(document.getElementById('markup').value) || 0
@@ -83,12 +123,10 @@ async function salvarItem() {
     await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dados) });
     limparFormularioPrincipal(); carregarItens();
 }
-
 async function salvarFilhoManual() {
     const item = {
-        tipo: document.getElementById('mTipo').value,
-        codigo: document.getElementById('mCodigo').value,
-        descricao: document.getElementById('mDescricao').value,
+        codigo: document.getElementById('mCodigo').value.toUpperCase(),
+        descricao: document.getElementById('mDescricao').value.toUpperCase(),
         quantidade: parseFloat(document.getElementById('mQtd').value) || 1,
         custo: parseFloat(document.getElementById('mCusto').value) || 0,
         markup: parseFloat(document.getElementById('mMarkup').value) || 0,
@@ -96,49 +134,4 @@ async function salvarFilhoManual() {
     };
     await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item) });
     fecharModal(); carregarItens();
-}
-
-function prepararPreview() {
-    const text = document.getElementById('txtExcel').value;
-    const delim = text.includes('\t') ? '\t' : ';';
-    itensNoPreview = text.split('\n').filter(l => l.length > 5).map(l => {
-        const c = l.split(delim);
-        return { nivel: c[0].replace(/\./g,'').trim(), codigo: c[1]?.trim(), descricao: c[4]?.trim() || 'S/D', quantidade: c[10] || 1, tipo: 'F' };
-    }).filter(i => i.codigo);
-    
-    document.querySelector('#tabelaPreview tbody').innerHTML = itensNoPreview.map((i, idx) => `<tr><td>${i.nivel}</td><td>${i.codigo}</td><td>${i.descricao}</td><td>${i.quantidade}</td><td><button onclick="itensNoPreview.splice(${idx},1);prepararPreview()">❌</button></td></tr>`).join('');
-    document.getElementById('areaColagem').style.display='none';
-    document.getElementById('areaPreview').style.display='block';
-}
-
-async function confirmarImportacao() {
-    await fetch(`/api/itens/${idPaiSelecionado}/filhos-bulk`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(itensNoPreview) });
-    fecharModal(); carregarItens();
-}
-
-function abrirImport(id) { idPaiSelecionado = id; document.getElementById('modalExcel').style.display='flex'; }
-function fecharModal() { document.getElementById('modalExcel').style.display='none'; }
-async function pintar(id, campo, cor) { await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, [campo]:cor}) }); carregarItens(); }
-async function statusDB(id, campo, valor) { await fetch('/api/itens', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, [campo]:valor}) }); }
-async function excluir(id) { if(confirm("Excluir?")) { await fetch(`/api/itens/${id}`, {method:'DELETE'}); carregarItens(); } }
-
-function editar(item) {
-    document.getElementById('editItemId').value = item.id;
-    document.getElementById('tipo').value = item.tipo;
-    document.getElementById('codigo').value = item.codigo;
-    document.getElementById('descricao').value = item.descricao;
-    document.getElementById('quantidade').value = item.quantidade;
-    document.getElementById('custo').value = item.custo;
-    document.getElementById('markup').value = item.markup;
-    document.getElementById('btnSalvar').textContent = "Atualizar Cadastro";
-}
-
-function limparFormularioPrincipal() {
-    document.getElementById('editItemId').value = '';
-    document.getElementById('codigo').value = '';
-    document.getElementById('descricao').value = '';
-    document.getElementById('quantidade').value = 1;
-    document.getElementById('custo').value = '';
-    document.getElementById('markup').value = '';
-    document.getElementById('btnSalvar').textContent = "Salvar Cadastro";
 }
