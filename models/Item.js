@@ -9,7 +9,8 @@ const sequelize = new Sequelize({
 
 const Item = sequelize.define('Item', {
   tipo: { type: DataTypes.STRING, allowNull: false, defaultValue: 'F' },
-  codigo: { type: DataTypes.STRING, unique: true, allowNull: false },
+  // Removido 'unique: true' para permitir itens duplicados em pais diferentes
+  codigo: { type: DataTypes.STRING, allowNull: false }, 
   descricao: { type: DataTypes.TEXT },
   markup: { type: DataTypes.FLOAT, defaultValue: 0 },
   custo: { type: DataTypes.FLOAT, defaultValue: 0 },

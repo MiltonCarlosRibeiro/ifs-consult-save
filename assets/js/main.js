@@ -62,6 +62,7 @@ function prepararPreview() {
     const lines = text.split('\n');
 
     itensNoPreview = lines.filter(l => l.trim().length > 10).map(l => {
+        // Remove aspas duplas típicas de arquivos CSV
         const c = l.replace(/"/g, '').split(delim);
         return { 
             nivel: c[0] ? c[0].trim() : '?',
@@ -69,7 +70,7 @@ function prepararPreview() {
             descricao: c[3] ? c[3].trim().toUpperCase() : 'S/D', 
             quantidade: c[5] ? parseFloat(c[5].replace(',', '.')) : 1 
         };
-    }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE");
+    }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE" && i.codigo !== "N° ITEM LINHA");
     
     renderizarTabelaPreview();
 }
@@ -120,7 +121,7 @@ async function confirmarImportacao() {
 function abrirImport(id) { 
     idPaiSelecionado = id; 
     document.getElementById('modalExcel').style.display = 'flex'; 
-    document.getElementById('txtExcel').value = ""; // Limpa ao abrir
+    document.getElementById('txtExcel').value = ""; // Limpa ao abrir para novo pai
     document.getElementById('areaPreview').style.display = 'none'; 
     document.getElementById('modalFooter').style.display = 'none'; 
 }

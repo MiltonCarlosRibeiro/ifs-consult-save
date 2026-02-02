@@ -17,9 +17,10 @@ app.get('/api/itens', async (req, res) => {
             const filhos = lista.filter(f => f.parentId === item.id);
             
             if (filhos.length === 0) {
+                // Item individual (Folha)
                 item.custoAgrupado = item.custo || 0;
             } else {
-                // Soma a venda dos filhos para compor o custo do pai
+                // Soma a venda dos filhos para compor o custo do pai (Lógica do Carrinho)
                 item.custoAgrupado = filhos.reduce((acc, f) => {
                     return acc + (calcularValores(f) * (f.quantidade || 1));
                 }, 0);
@@ -35,7 +36,7 @@ app.get('/api/itens', async (req, res) => {
     } catch (e) { res.status(500).send(); }
 });
 
-// Salvar/Editar Item
+// Salvar ou Editar Item Individual
 app.post('/api/itens', async (req, res) => {
     try {
         const { id, ...dados } = req.body;
@@ -50,29 +51,32 @@ app.post('/api/itens', async (req, res) => {
     } catch (error) { res.status(400).json({ error: 'Erro ao salvar.' }); }
 });
 
-// Persistência em Massa (Bulk) vinculada ao Pai selecionado
+// Persistência em Massa (Bulk) - Permite duplicatas amarradas ao Pai
 app.post('/api/itens/:paiId/filhos-bulk', async (req, res) => {
     try {
         const { paiId } = req.params;
         const lista = req.body.map(i => ({ 
             ...i, 
-            parentId: parseInt(paiId),
+            parentId: parseInt(paiId), // Encapsula os itens pelo ID do pai atual
             codigo: i.codigo.toUpperCase().trim(),
             descricao: i.descricao.toUpperCase().trim()
         }));
-        // Removido o ignoreDuplicates para permitir o mesmo código em pais diferentes
+        
+        // Inserção em massa permitindo códigos que já existam em outros pais
         await Item.bulkCreate(lista); 
         res.status(201).send();
-    } catch (e) { res.status(500).json({error: e.message}); }
+    } catch (e) { 
+        res.status(500).json({error: e.message}); 
+    }
 });
 
+// Excluir Item
 app.delete('/api/itens/:id', async (req, res) => {
-    // Ao deletar, removemos o item selecionado
     await Item.destroy({ where: { id: req.params.id } });
     res.status(200).send();
 });
 
-// Inicialização com Link Clicável conforme solicitado
+// Inicialização com Link Clicável
 const PORT = 8091;
 app.listen(PORT, () => {
     console.log(`\n🚀 Sistema rodando com sucesso!`);

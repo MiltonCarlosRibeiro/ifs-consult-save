@@ -20,7 +20,8 @@
                 <div class="field"><label>Custo Unit</label><input type="number" id="custo" class="complement-input" step="0.01"></div>
                 <div class="field"><label>Markup %</label><input type="number" id="markup" class="complement-input" step="0.01" placeholder="Ex: 0.25"></div>
             </div>
-            <div style="margin-top:15px; display:flex; gap:10px;">
+            
+            <div class="form-button-container">
                 <button onclick="salvarItem()" class="btn-copy" id="btnSalvar">Salvar Cadastro</button>
                 <button onclick="limparFormularioPrincipal()" class="btn-secondary">Limpar / Novo</button>
             </div>
@@ -34,9 +35,9 @@
         <header><h3>Compor Sub-itens (BOM)</h3><button onclick="fecharModal()" class="close-btn">&times;</button></header>
         
         <div class="modal-scroll-area">
-            <div class="manual-insert-box">
+            <div class="manual-insert-box" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 1px solid #ddd;">
                 <h4>1. Adicionar Manualmente</h4>
-                <div class="input-grid">
+                <div class="input-grid" style="padding: 10px 0;">
                     <div class="field"><label>Código</label><input type="text" id="mCodigo" class="complement-input uppercase"></div>
                     <div class="field" style="flex:1;"><label>Descrição</label><input type="text" id="mDescricao" class="complement-input uppercase"></div>
                     <div class="field"><label>Qtd</label><input type="number" id="mQtd" class="complement-input" value="1"></div>
@@ -46,15 +47,17 @@
                 <button onclick="salvarFilhoManual()" class="btn-copy" style="margin-top:10px;">Adicionar ao Carrinho</button>
             </div>
 
-            <div class="separator-text">OU COLAR NOVO PADRÃO (A, C, D, F)</div>
+            <div class="separator-text" style="font-weight: bold; color: var(--primary-blue); margin: 20px 0 10px 0;">OU COLAR NOVO PADRÃO (A, C, D, F)</div>
             <textarea id="txtExcel" class="big-textarea" placeholder="Cole aqui a tabela do IFS (A=Nivel, C=Codigo, D=Descricao, F=Qtd)..."></textarea>
-            <button onclick="prepararPreview()" class="btn-copy" style="width:100%;">Analisar Dados IFS</button>
+            <button onclick="prepararPreview()" class="btn-copy" style="width:100%; margin-bottom: 15px;">Analisar Dados IFS</button>
             
-            <div id="areaPreview" style="display:none; margin-top:20px;">
-                <table id="tabelaPreview" class="preview-table">
-                    <thead><tr><th>Linha</th><th>Código</th><th>Descrição</th><th>Qtd</th><th>Ação</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+            <div id="areaPreview" style="display:none;">
+                <div class="table-scroll">
+                    <table id="tabelaPreview" class="preview-table">
+                        <thead><tr><th>Linha</th><th>Código</th><th>Descrição</th><th>Qtd</th><th>Ação</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
