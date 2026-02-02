@@ -9,7 +9,6 @@ async function carregarItens() {
     const itens = await res.json();
     const container = document.getElementById('arvoreEstrutura');
     container.innerHTML = "";
-    // Filtra itens raiz (aqueles que não possuem parentId)
     itens.filter(i => !i.parentId).forEach(r => renderNivel(r, itens, container, 0));
 }
 
@@ -40,31 +39,44 @@ function renderNivel(item, lista, container, nivel) {
                 </div>
             </header>
             <div class="mp-list">
-                <div class="mp-row-field">
+                <div class="mp-row-field" style="background:${item.corDesc || 'transparent'}">
                     <span style="flex:1"><b>DESCRIÇÃO:</b> ${item.descricao} (x${item.quantidade})</span>
+                    <div class="color-picker">
+                        <span class="dot g" onclick="atualizarCor(${item.id}, 'corDesc', 'var(--bg-verde-limao)')"></span>
+                        <span class="dot b" onclick="atualizarCor(${item.id}, 'corDesc', 'var(--bg-azul-pastel)')"></span>
+                        <span class="dot r" onclick="atualizarCor(${item.id}, 'corDesc', 'var(--bg-vermelho-pastel)')"></span>
+                        <span class="dot n" onclick="atualizarCor(${item.id}, 'corDesc', 'transparent')"></span>
+                    </div>
                 </div>
-                <div class="mp-row-field">
-                    <span><b>${labelCusto}:</b> R$ ${item.custoAgrupado.toFixed(2)} | <b>M.U:</b> ${(item.markup*100).toFixed(0)}% | <b>VENDA FINAL: R$ ${item.vendaFinal.toFixed(2)}</b></span>
+                <div class="mp-row-field" style="background:${item.corCusto || 'transparent'}">
+                    <span style="flex:1"><b>${labelCusto}:</b> R$ ${item.custoAgrupado.toFixed(2)} | <b>M.U:</b> ${(item.markup*100).toFixed(0)}% | <b>VENDA FINAL: R$ ${item.vendaFinal.toFixed(2)}</b></span>
+                    <div class="color-picker">
+                        <span class="dot g" onclick="atualizarCor(${item.id}, 'corCusto', 'var(--bg-verde-limao)')"></span>
+                        <span class="dot b" onclick="atualizarCor(${item.id}, 'corCusto', 'var(--bg-azul-pastel)')"></span>
+                        <span class="dot r" onclick="atualizarCor(${item.id}, 'corCusto', 'var(--bg-vermelho-pastel)')"></span>
+                        <span class="dot n" onclick="atualizarCor(${item.id}, 'corCusto', 'transparent')"></span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="children-container"></div>
     `;
     const childContainer = wrapper.querySelector('.children-container');
-    
-    // LOGICA: Sempre inicia fechado
-    childContainer.style.display = 'none'; 
+    childContainer.style.display = 'none'; // Inicia sempre fechado
 
     container.appendChild(wrapper);
     filhos.forEach(f => renderNivel(f, lista, childContainer, nivel + 1));
 }
 
-/** MAPEAMENTO DE COLUNAS IFS: A(0), C(2), D(3), F(5) **/
+async function atualizarCor(id, campo, valor) {
+    await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, [campo]: valor }) });
+    carregarItens();
+}
+
 function prepararPreview() {
     const text = document.getElementById('txtExcel').value;
     const delim = text.includes('\t') ? '\t' : (text.includes(';') ? ';' : ',');
     const lines = text.split('\n');
-
     itensNoPreview = lines.filter(l => l.trim().length > 10).map(l => {
         const c = l.replace(/"/g, '').split(delim);
         return { 
@@ -74,52 +86,31 @@ function prepararPreview() {
             quantidade: c[5] ? parseFloat(c[5].replace(',', '.')) : 1 
         };
     }).filter(i => i.codigo && i.codigo !== "ITEM COMPONENTE" && i.codigo !== "N° ITEM LINHA");
-    
     renderizarTabelaPreview();
 }
 
-/** RENDERIZAÇÃO DA TABELA DE PREVIEW NO MODAL **/
 function renderizarTabelaPreview() {
     const tbody = document.querySelector('#tabelaPreview tbody');
     tbody.innerHTML = itensNoPreview.map((i, idx) => `
-        <tr>
-            <td>${i.nivel}</td>
-            <td>${i.codigo}</td>
-            <td>${i.descricao}</td>
-            <td>${i.quantidade}</td>
-            <td><button class="btn-preview-del" onclick="removerDoPreview(${idx})">❌</button></td>
-        </tr>`).join('');
-    
+        <tr><td>${i.nivel}</td><td>${i.codigo}</td><td>${i.descricao}</td><td>${i.quantidade}</td>
+        <td><button class="btn-preview-del" onclick="removerDoPreview(${idx})">❌</button></td></tr>`).join('');
     document.getElementById('areaPreview').style.display = itensNoPreview.length > 0 ? 'block' : 'none';
     document.getElementById('modalFooter').style.display = itensNoPreview.length > 0 ? 'block' : 'none';
 }
 
-function removerDoPreview(index) {
-    itensNoPreview.splice(index, 1);
-    renderizarTabelaPreview();
-}
+function removerDoPreview(index) { itensNoPreview.splice(index, 1); renderizarTabelaPreview(); }
 
-/** CONFIRMAR IMPORTAÇÃO COM LIMPEZA DA CAIXA **/
 async function confirmarImportacao() {
     if (itensNoPreview.length === 0) return;
-
-    const res = await fetch(`/api/itens/${idPaiSelecionado}/filhos-bulk`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(itensNoPreview) 
-    });
-
+    const res = await fetch(`/api/itens/${idPaiSelecionado}/filhos-bulk`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(itensNoPreview) });
     if (res.ok) {
         document.getElementById('txtExcel').value = "";
         itensNoPreview = [];
         renderizarTabelaPreview();
-        
-        fecharModal(); 
-        carregarItens(); 
+        fecharModal(); carregarItens();
     }
 }
 
-/** AUXILIARES DE MODAL E STATUS **/
 function abrirImport(id) { 
     idPaiSelecionado = id; 
     document.getElementById('modalExcel').style.display = 'flex'; 
@@ -137,18 +128,10 @@ function toggleNode(btn) {
     btn.innerText = isHidden ? '▼' : '▶'; 
 }
 
-async function statusDB(id, campo, valor) { 
-    await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, [campo]: valor }) }); 
-}
+async function statusDB(id, campo, valor) { await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, [campo]: valor }) }); }
 
-async function excluir(id) { 
-    if (confirm("Excluir item e todos os seus filhos?")) { 
-        await fetch(`/api/itens/${id}`, { method: 'DELETE' }); 
-        carregarItens(); 
-    } 
-}
+async function excluir(id) { if (confirm("Excluir item e todos os seus filhos?")) { await fetch(`/api/itens/${id}`, { method: 'DELETE' }); carregarItens(); } }
 
-/** GERENCIAMENTO MANUAL (CRUD) **/
 function editar(item) {
     document.getElementById('editItemId').value = item.id;
     document.getElementById('codigo').value = item.codigo;
@@ -179,8 +162,7 @@ async function salvarItem() {
         markup: parseFloat(document.getElementById('markup').value) || 0
     };
     await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-    limparFormularioPrincipal(); 
-    carregarItens();
+    limparFormularioPrincipal(); carregarItens();
 }
 
 async function salvarFilhoManual() {
@@ -193,6 +175,5 @@ async function salvarFilhoManual() {
         parentId: idPaiSelecionado
     };
     await fetch('/api/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
-    fecharModal(); 
-    carregarItens();
+    fecharModal(); carregarItens();
 }

@@ -11,7 +11,7 @@
     --white: #ffffff;
     --border-color: #dddddd;
     
-    /* Cores de Destaque */
+    /* Cores de Destaque / Banco */
     --bg-verde-limao: #ccffcc;
     --bg-azul-pastel: #dde8fa;
     --bg-vermelho-pastel: #ffcccc;
@@ -37,7 +37,7 @@ header {
 .uppercase { text-transform: uppercase; }
 
 /* ==========================================================================
-   2. FORMULÁRIOS E INPUTS
+   2. FORMULÁRIOS E INPUTS (CADASTRO RAIZ)
    ========================================================================== */
 .form-section { margin-bottom: 30px; }
 
@@ -47,9 +47,9 @@ header {
     padding: 20px 20px 10px 20px;
 }
 
-/* NOVO: CONTAINER DE BOTÕES COM MARGEM AUMENTADA (SOLICITADO) */
+/* NOVO: CONTAINER DE BOTÕES COM MARGEM AUMENTADA (DISTANCIAMENTO DA ÁRVORE) */
 .form-button-container {
-    padding: 10px 20px 40px 20px; /* Aumento da margem inferior para 40px */
+    padding: 10px 20px 40px 20px; 
     display: flex;
     gap: 12px;
 }
@@ -67,7 +67,7 @@ header {
 .complement-input:focus { border-color: var(--primary-blue); outline: none; }
 
 /* ==========================================================================
-   3. ESTRUTURA DA ÁRVORE (CARDS)
+   3. ESTRUTURA DA ÁRVORE (CARDS, ACORDEON E CORES)
    ========================================================================== */
 .mp-card { 
     background: var(--white); border-radius: 10px; 
@@ -77,10 +77,26 @@ header {
 
 .header-blue { background: var(--primary-blue) !important; color: white; padding: 12px 20px; }
 .node-wrapper { margin-top: 10px; }
+
+/* Linhas que ligam a árvore */
 .tree-branch { border-left: 2px solid var(--border-color) !important; position: relative; padding-left: 10px; margin-left: 20px; }
 .tree-branch::before { content: ""; position: absolute; left: -10px; top: 25px; width: 10px; height: 2px; background: var(--border-color); }
+
 .checklist-group { display: flex; gap: 12px; font-size: 0.8rem; background: #f1f3f5; padding: 8px 15px; border-radius: 6px; align-items: center; }
 .mp-row-field { padding: 12px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; align-items: center; }
+
+/* Seletores de cores (Bolinhas) */
+.color-picker { display: flex; gap: 5px; margin-left: 15px; }
+.dot {
+    height: 14px; width: 14px; border-radius: 50%;
+    cursor: pointer; border: 1px solid #999; display: inline-block;
+    transition: transform 0.1s;
+}
+.dot:hover { transform: scale(1.2); }
+.dot.g { background: var(--bg-verde-limao); }
+.dot.b { background: var(--bg-azul-pastel); }
+.dot.r { background: var(--bg-vermelho-pastel); }
+.dot.n { background: #fff; }
 
 /* ==========================================================================
    4. MODAL E ROLAGEM (SCROLL)
@@ -93,10 +109,15 @@ header {
 .preview-table { width: 100%; border-collapse: collapse; }
 .preview-table th { position: sticky; top: 0; background: #f8f9fa; padding: 12px; border-bottom: 2px solid var(--border-color); text-align: left; z-index: 2; }
 .preview-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-.big-textarea { width: 100%; margin: 10px 0; padding: 15px; height: 120px; border-radius: 8px; border: 2px solid #ddd; font-family: monospace; box-sizing: border-box; resize: vertical; }
+
+.big-textarea { 
+    width: 100%; margin: 10px 0; padding: 15px; height: 120px; 
+    border-radius: 8px; border: 2px solid #ddd; font-family: 'Cascadia Code', monospace; 
+    box-sizing: border-box; resize: vertical; 
+}
 
 /* ==========================================================================
-   5. BOTÕES
+   5. BOTÕES E AUXILIARES
    ========================================================================== */
 .btn-copy, .btn-secondary { cursor: pointer; border: none; border-radius: 6px; padding: 10px 22px; font-weight: bold; transition: all 0.2s ease; }
 .btn-copy { background: var(--primary-blue); color: white; }
